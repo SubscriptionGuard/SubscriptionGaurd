@@ -1,0 +1,21 @@
+*.apk
+*.aar
+*.aab
+
+# Gradle caches
+.gradle/
+build/
+*/build/
+
+# Local Android SDK configuration
+local.properties
+
+# Android Studio and IDE configs
+.idea/
+*.iml
+captures/
+.navigation/
+
+# OS generated files
+.DS_Store
+Thumbs.db
