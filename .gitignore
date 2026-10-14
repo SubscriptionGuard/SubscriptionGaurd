@@ -1,21 +1,15 @@
-*.apk
-*.aar
-*.aab
-
-# Gradle caches
-.gradle/
-build/
-*/build/
-
-# Local Android SDK configuration
-local.properties
-
-# Android Studio and IDE configs
-.idea/
 *.iml
-captures/
-.navigation/
-
-# OS generated files
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
 .DS_Store
-Thumbs.db
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
