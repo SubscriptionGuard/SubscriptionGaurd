@@ -150,7 +150,7 @@
             android:backgroundTint="@color/primary_green" />
 
         <Button
-            android:id="@+id/btn_logout"
+            android:id="@+id/btn_exit_demo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
