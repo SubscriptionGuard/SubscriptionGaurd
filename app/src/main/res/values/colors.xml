@@ -3,11 +3,37 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="app_background">#101813</color>
-    <color name="card_background">#1D2921</color>
-    <color name="primary_green">#4CAF70</color>
-    <color name="text_primary">#F5F7F5</color>
-    <color name="text_secondary">#AAB8AE</color>
-    <color name="card_border">#35463A</color>
+    <!-- Light Theme Palette (from SVG Light Theme rows) -->
+    <color name="app_background">#F3F5F0</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="surface_elevated">#EEF0EB</color>
+    <color name="card_border">#DCE0D8</color>
 
+    <color name="primary_green">#34D17A</color>
+    <color name="accent_green_text">#15803D</color>
+    <color name="button_on_green">#0B1A10</color>
+    <color name="green_surface">#DDF5E6</color>
+    <color name="green_border">#2F6B47</color>
+
+    <color name="text_primary">#121513</color>
+    <color name="text_secondary">#69716A</color>
+    <color name="text_muted">#9AA19B</color>
+
+    <color name="warning_amber">#A86A00</color>
+    <color name="warning_surface">#FDF1D8</color>
+
+    <color name="danger_red">#D93636</color>
+    <color name="danger_surface">#FDE4E2</color>
+
+    <color name="accent_blue">#7C9CFF</color>
+    <color name="blue_surface">#E8EEFF</color>
+
+    <!-- Brand & Camera Colors -->
+    <color name="camera_background">#050605</color>
+    <color name="brand_netflix">#E50914</color>
+    <color name="brand_spotify">#1ED760</color>
+    <color name="brand_telus">#4B286D</color>
+    <color name="brand_disney">#113CCF</color>
+    <color name="brand_crave">#1E3A8A</color>
+    <color name="brand_doordash">#FF3008</color>
 </resources>
