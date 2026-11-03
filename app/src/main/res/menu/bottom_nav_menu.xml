@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_nav_home"
+        android:title="Home" />
+    <item
+        android:id="@+id/subscriptionsFragment"
+        android:icon="@drawable/ic_nav_subscriptions"
+        android:title="Subscriptions" />
+    <item
+        android:id="@+id/splitsFragment"
+        android:icon="@drawable/ic_nav_splits"
+        android:title="Splits" />
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_nav_profile"
+        android:title="Profile" />
+</menu>

@@ -1,34 +1,56 @@
 package com.tfmhntspn.subguard;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.content.Intent;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
+
+import com.tfmhntspn.subguard.databinding.ActivityMainBinding;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        findViewById(R.id.btn_get_started).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-        });
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment != null) {
+            NavController navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(binding.bottomNav, navController);
 
-        //open dashboard in demo board
-        findViewById(R.id.btn_demo).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-            startActivity(intent);
-        });
+            Set<Integer> topLevelDestinations = new HashSet<>(Arrays.asList(
+                    R.id.homeFragment,
+                    R.id.subscriptionsFragment,
+                    R.id.splitsFragment,
+                    R.id.roommateSplitsV1Fragment,
+                    R.id.profileFragment
+            ));
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                boolean showBottomNav = topLevelDestinations.contains(destination.getId());
+                binding.bottomNav.setVisibility(showBottomNav ? View.VISIBLE : View.GONE);
+                binding.bottomNavDivider.setVisibility(showBottomNav ? View.VISIBLE : View.GONE);
+            });
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;

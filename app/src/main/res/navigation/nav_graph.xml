@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/welcomeFragment">
+
+    <!-- 01: Welcome -->
+    <fragment
+        android:id="@+id/welcomeFragment"
+        android:name="com.tfmhntspn.subguard.fragments.WelcomeFragment"
+        android:label="Welcome"
+        tools:layout="@layout/fragment_welcome">
+        <action
+            android:id="@+id/action_welcomeFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_welcomeFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
+        <action
+            android:id="@+id/action_welcomeFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- 02: Sign Up -->
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SignUpFragment"
+        android:label="Create Account"
+        tools:layout="@layout/fragment_sign_up">
+        <action
+            android:id="@+id/action_signUpFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/welcomeFragment" />
+        <action
+            android:id="@+id/action_signUpFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- 03: Log In -->
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.tfmhntspn.subguard.fragments.LoginFragment"
+        android:label="Log In"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_loginFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment"
+            app:popUpTo="@id/welcomeFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_forgotPasswordFragment"
+            app:destination="@id/forgotPasswordFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Forgot Password -->
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ForgotPasswordFragment"
+        android:label="Forgot Password"
+        tools:layout="@layout/fragment_forgot_password" />
+
+    <!-- 04: Dashboard (Home Hub) -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.tfmhntspn.subguard.fragments.HomeFragment"
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_addSubscriptionFragment"
+            app:destination="@id/addSubscriptionFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_scanReceiptFragment"
+            app:destination="@id/scanReceiptFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_simulatorFragment"
+            app:destination="@id/simulatorFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_subscriptionsFragment"
+            app:destination="@id/subscriptionsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_subscriptionDetailsFragment"
+            app:destination="@id/subscriptionDetailsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <!-- 05: My Subscriptions -->
+    <fragment
+        android:id="@+id/subscriptionsFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SubscriptionsFragment"
+        android:label="My Subscriptions"
+        tools:layout="@layout/fragment_subscriptions">
+        <action
+            android:id="@+id/action_subscriptionsFragment_to_subscriptionDetailsFragment"
+            app:destination="@id/subscriptionDetailsFragment" />
+        <action
+            android:id="@+id/action_subscriptionsFragment_to_addSubscriptionFragment"
+            app:destination="@id/addSubscriptionFragment" />
+    </fragment>
+
+    <!-- 06: Profile -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profileFragment_to_deleteAccountFragment"
+            app:destination="@id/deleteAccountFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_welcomeFragment"
+            app:destination="@id/welcomeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- 07: Delete Account -->
+    <fragment
+        android:id="@+id/deleteAccountFragment"
+        android:name="com.tfmhntspn.subguard.fragments.DeleteAccountFragment"
+        android:label="Delete Account"
+        tools:layout="@layout/fragment_delete_account">
+        <action
+            android:id="@+id/action_deleteAccountFragment_to_welcomeFragment"
+            app:destination="@id/welcomeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- 08: Subscription Details -->
+    <fragment
+        android:id="@+id/subscriptionDetailsFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SubscriptionDetailsFragment"
+        android:label="Subscription Details"
+        tools:layout="@layout/fragment_subscription_details">
+        <action
+            android:id="@+id/action_subscriptionDetailsFragment_to_cancellationGuideFragment"
+            app:destination="@id/cancellationGuideFragment" />
+        <action
+            android:id="@+id/action_subscriptionDetailsFragment_to_simulatorFragment"
+            app:destination="@id/simulatorFragment" />
+        <action
+            android:id="@+id/action_subscriptionDetailsFragment_to_addSubscriptionFragment"
+            app:destination="@id/addSubscriptionFragment" />
+    </fragment>
+
+    <!-- 09: Cancellation Guide -->
+    <fragment
+        android:id="@+id/cancellationGuideFragment"
+        android:name="com.tfmhntspn.subguard.fragments.CancellationGuideFragment"
+        android:label="Cancellation Guide"
+        tools:layout="@layout/fragment_cancellation_guide">
+        <action
+            android:id="@+id/action_cancellationGuideFragment_to_subscriptionsFragment"
+            app:destination="@id/subscriptionsFragment"
+            app:popUpTo="@id/subscriptionsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- 10: Add Subscription -->
+    <fragment
+        android:id="@+id/addSubscriptionFragment"
+        android:name="com.tfmhntspn.subguard.fragments.AddSubscriptionFragment"
+        android:label="Add Subscription"
+        tools:layout="@layout/fragment_add_subscription">
+        <action
+            android:id="@+id/action_addSubscriptionFragment_to_scanReceiptFragment"
+            app:destination="@id/scanReceiptFragment" />
+        <action
+            android:id="@+id/action_addSubscriptionFragment_to_subscriptionsFragment"
+            app:destination="@id/subscriptionsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+    <!-- 11: Receipt Scanner -->
+    <fragment
+        android:id="@+id/scanReceiptFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ScanReceiptFragment"
+        android:label="Scan Receipt"
+        tools:layout="@layout/fragment_scan_receipt">
+        <action
+            android:id="@+id/action_scanReceiptFragment_to_reviewScanDetailsFragment"
+            app:destination="@id/reviewScanDetailsFragment" />
+    </fragment>
+
+    <!-- 12: Scan Review -->
+    <fragment
+        android:id="@+id/reviewScanDetailsFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ReviewScanDetailsFragment"
+        android:label="Review Details"
+        tools:layout="@layout/fragment_review_scan_details">
+        <action
+            android:id="@+id/action_reviewScanDetailsFragment_to_subscriptionsFragment"
+            app:destination="@id/subscriptionsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+    <!-- R1: Roommates / Splits Hub (Maple St. House) -->
+    <fragment
+        android:id="@+id/splitsFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SplitsFragment"
+        android:label="Roommate Splits"
+        tools:layout="@layout/fragment_splits">
+        <action
+            android:id="@+id/action_splitsFragment_to_addRoommateFragment"
+            app:destination="@id/addRoommateFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_inviteApprovalFragment"
+            app:destination="@id/inviteApprovalFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_shareSubscriptionFragment"
+            app:destination="@id/shareSubscriptionFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_reviewChangeFragment"
+            app:destination="@id/reviewChangeFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_householdSettingsFragment"
+            app:destination="@id/householdSettingsFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_sendReminderFragment"
+            app:destination="@id/sendReminderFragment" />
+        <action
+            android:id="@+id/action_splitsFragment_to_roommateSplitsV1Fragment"
+            app:destination="@id/roommateSplitsV1Fragment" />
+    </fragment>
+
+    <!-- 13: Classic Roommate Splits (v1) -->
+    <fragment
+        android:id="@+id/roommateSplitsV1Fragment"
+        android:name="com.tfmhntspn.subguard.fragments.RoommateSplitsV1Fragment"
+        android:label="Roommate Splits"
+        tools:layout="@layout/fragment_roommate_splits_v1">
+        <action
+            android:id="@+id/action_roommateSplitsV1Fragment_to_sendReminderFragment"
+            app:destination="@id/sendReminderFragment" />
+    </fragment>
+
+    <!-- 14 & R7: Send Reminder (SMS & Email) -->
+    <fragment
+        android:id="@+id/sendReminderFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SendReminderFragment"
+        android:label="Send Reminder"
+        tools:layout="@layout/fragment_send_reminder" />
+
+    <!-- 15: Wasted Money Simulator -->
+    <fragment
+        android:id="@+id/simulatorFragment"
+        android:name="com.tfmhntspn.subguard.fragments.SimulatorFragment"
+        android:label="Wasted Money Simulator"
+        tools:layout="@layout/fragment_simulator">
+        <action
+            android:id="@+id/action_simulatorFragment_to_subscriptionsFragment"
+            app:destination="@id/subscriptionsFragment" />
+    </fragment>
+
+    <!-- R2: Add Roommate -->
+    <fragment
+        android:id="@+id/addRoommateFragment"
+        android:name="com.tfmhntspn.subguard.fragments.AddRoommateFragment"
+        android:label="Add Roommate"
+        tools:layout="@layout/fragment_add_roommate">
+        <action
+            android:id="@+id/action_addRoommateFragment_to_inviteApprovalFragment"
+            app:destination="@id/inviteApprovalFragment" />
+    </fragment>
+
+    <!-- R3: Invite Approval (Priya's view) -->
+    <fragment
+        android:id="@+id/inviteApprovalFragment"
+        android:name="com.tfmhntspn.subguard.fragments.InviteApprovalFragment"
+        android:label="Invite Approval"
+        tools:layout="@layout/fragment_invite_approval" />
+
+    <!-- R4: Share a Subscription -->
+    <fragment
+        android:id="@+id/shareSubscriptionFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ShareSubscriptionFragment"
+        android:label="Share a Subscription"
+        tools:layout="@layout/fragment_share_subscription" />
+
+    <!-- R5: Review Change (Maya's view) -->
+    <fragment
+        android:id="@+id/reviewChangeFragment"
+        android:name="com.tfmhntspn.subguard.fragments.ReviewChangeFragment"
+        android:label="Review Change"
+        tools:layout="@layout/fragment_review_change" />
+
+    <!-- R6: Household Settings -->
+    <fragment
+        android:id="@+id/householdSettingsFragment"
+        android:name="com.tfmhntspn.subguard.fragments.HouseholdSettingsFragment"
+        android:label="Household Settings"
+        tools:layout="@layout/fragment_household_settings" />
+
+</navigation>
