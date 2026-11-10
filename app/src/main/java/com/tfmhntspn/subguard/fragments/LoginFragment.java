@@ -1,5 +1,6 @@
 package com.tfmhntspn.subguard.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
@@ -64,17 +65,15 @@ public class LoginFragment extends Fragment {
                 return;
             }
 
-            // Allow instant demo login for sample SVG account sophiadoe@gmail.com
-            if ("sophiadoe@gmail.com".equalsIgnoreCase(emailText)) {
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_loginFragment_to_homeFragment);
-                return;
-            }
-
             auth.signInWithEmailAndPassword(emailText, passwordText)
                     .addOnCompleteListener(task -> {
                         if (!isAdded()) return;
                         if (task.isSuccessful()) {
+                            requireContext()
+                                    .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                                    .edit()
+                                    .remove(HomeFragment.KEY_CUSTOM_NAME)
+                                    .apply();
                             Toast.makeText(requireContext(), "Login Successful", Toast.LENGTH_SHORT).show();
                             NavHostFragment.findNavController(this)
                                     .navigate(R.id.action_loginFragment_to_homeFragment);
@@ -155,6 +154,11 @@ public class LoginFragment extends Fragment {
                 .addOnCompleteListener(requireActivity(), task -> {
                     if (!isAdded()) return;
                     if (task.isSuccessful()) {
+                        requireContext()
+                                .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                                .edit()
+                                .remove(HomeFragment.KEY_CUSTOM_NAME)
+                                .apply();
                         NavHostFragment.findNavController(this)
                                 .navigate(R.id.action_loginFragment_to_homeFragment);
                     } else {

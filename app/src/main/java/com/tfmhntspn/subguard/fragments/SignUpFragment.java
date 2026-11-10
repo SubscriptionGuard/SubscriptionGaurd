@@ -1,5 +1,6 @@
 package com.tfmhntspn.subguard.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
@@ -24,7 +25,9 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentSignUpBinding;
 
@@ -54,6 +57,8 @@ public class SignUpFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigateUp());
 
         binding.btnSignup.setOnClickListener(v -> {
+            String fullNameText = binding.etName.getText() != null
+                    ? binding.etName.getText().toString().trim() : "";
             String emailText = binding.etEmail.getText() != null
                     ? binding.etEmail.getText().toString().trim() : "";
             String passwordText = binding.etPassword.getText() != null
@@ -75,6 +80,27 @@ public class SignUpFragment extends Fragment {
                     .addOnCompleteListener(task -> {
                         if (!isAdded()) return;
                         if (task.isSuccessful()) {
+                            FirebaseUser user = auth.getCurrentUser();
+                            if (!fullNameText.isEmpty()) {
+                                requireContext()
+                                        .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                                        .edit()
+                                        .putString(HomeFragment.KEY_CUSTOM_NAME, fullNameText)
+                                        .apply();
+                                if (user != null) {
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(fullNameText)
+                                            .build();
+                                    user.updateProfile(profileUpdates);
+                                }
+                            } else {
+                                requireContext()
+                                        .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                                        .edit()
+                                        .remove(HomeFragment.KEY_CUSTOM_NAME)
+                                        .apply();
+                            }
+
                             Toast.makeText(requireContext(), "Account created!", Toast.LENGTH_SHORT).show();
                             NavHostFragment.findNavController(this)
                                     .navigate(R.id.action_signUpFragment_to_homeFragment);
@@ -152,6 +178,11 @@ public class SignUpFragment extends Fragment {
                 .addOnCompleteListener(requireActivity(), task -> {
                     if (!isAdded()) return;
                     if (task.isSuccessful()) {
+                        requireContext()
+                                .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                                .edit()
+                                .remove(HomeFragment.KEY_CUSTOM_NAME)
+                                .apply();
                         NavHostFragment.findNavController(this)
                                 .navigate(R.id.action_signUpFragment_to_homeFragment);
                     } else {

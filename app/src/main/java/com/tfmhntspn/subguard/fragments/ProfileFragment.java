@@ -1,5 +1,7 @@
 package com.tfmhntspn.subguard.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentProfileBinding;
 
@@ -32,13 +35,13 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        String resolvedName = HomeFragment.resolveUserDisplayName(requireContext());
+        binding.tvProfileName.setText(resolvedName);
+        binding.etProfileName.setText(resolvedName);
+        binding.tvProfileInitials.setText(HomeFragment.extractInitials(resolvedName));
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
-            String displayName = currentUser.getDisplayName();
-            if (displayName != null && !displayName.trim().isEmpty()) {
-                binding.tvProfileName.setText(displayName);
-                binding.etProfileName.setText(displayName);
-            }
             String email = currentUser.getEmail();
             if (email != null && !email.trim().isEmpty()) {
                 binding.tvProfileEmail.setText(email);
@@ -53,6 +56,19 @@ public class ProfileFragment extends Fragment {
                     ? binding.etProfileEmail.getText().toString().trim() : "";
             if (!updatedName.isEmpty()) {
                 binding.tvProfileName.setText(updatedName);
+                binding.tvProfileInitials.setText(HomeFragment.extractInitials(updatedName));
+
+                SharedPreferences prefs = requireContext()
+                        .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString(HomeFragment.KEY_CUSTOM_NAME, updatedName).apply();
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                            .setDisplayName(updatedName)
+                            .build();
+                    user.updateProfile(profileUpdates);
+                }
             }
             if (!updatedEmail.isEmpty()) {
                 binding.tvProfileEmail.setText(updatedEmail);
@@ -61,6 +77,11 @@ public class ProfileFragment extends Fragment {
         });
 
         binding.btnExitDemo.setOnClickListener(v -> {
+            requireContext()
+                    .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .remove(HomeFragment.KEY_CUSTOM_NAME)
+                    .apply();
             FirebaseAuth.getInstance().signOut();
             NavHostFragment.findNavController(this).navigate(R.id.action_profileFragment_to_welcomeFragment);
         });
