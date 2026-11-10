@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,11 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentHomeBinding;
 
@@ -23,10 +29,19 @@ import java.util.Locale;
 
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
+
     public static final String PREFS_NAME = "subguard_user_prefs";
     public static final String KEY_CUSTOM_NAME = "custom_display_name";
 
+    public static final String FIELD_BURN_RATE = "burnRate";
+    public static final String FIELD_ACTIVE_COUNT = "activeCount";
+    public static final String FIELD_MONTHLY_BUDGET = "monthlyBudget";
+    private static final double DEFAULT_MONTHLY_BUDGET = 150.0;
+
     private FragmentHomeBinding binding;
+    private DatabaseReference userSummaryRef;
+    private ValueEventListener burnRateListener;
 
     @Nullable
     @Override
@@ -41,6 +56,7 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bindUserGreetingAndAvatar();
+        observeBurnRateFromFirebase();
 
         binding.btnThemeToggle.setOnClickListener(v -> {
             int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
@@ -64,6 +80,64 @@ public class HomeFragment extends Fragment {
 
         binding.btnSeeAllRenewals.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_homeFragment_to_subscriptionsFragment));
+    }
+
+    private void observeBurnRateFromFirebase() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            updateBurnRateUi(0.0, 0, DEFAULT_MONTHLY_BUDGET);
+            return;
+        }
+
+        userSummaryRef = FirebaseDatabase.getInstance()
+                .getReference("users")
+                .child(currentUser.getUid());
+
+        burnRateListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (binding == null) return;
+
+                Double burnRateVal = snapshot.child(FIELD_BURN_RATE).getValue(Double.class);
+                Long activeCountVal = snapshot.child(FIELD_ACTIVE_COUNT).getValue(Long.class);
+                Double budgetVal = snapshot.child(FIELD_MONTHLY_BUDGET).getValue(Double.class);
+
+                double burnRate = burnRateVal != null ? Math.max(0.0, burnRateVal) : 0.0;
+                int activeCount = activeCountVal != null ? Math.max(0, activeCountVal.intValue()) : 0;
+                double monthlyBudget = (budgetVal != null && budgetVal > 0)
+                        ? budgetVal : DEFAULT_MONTHLY_BUDGET;
+
+                updateBurnRateUi(burnRate, activeCount, monthlyBudget);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "Failed to read burnRate from Firebase", error.toException());
+            }
+        };
+
+        userSummaryRef.addValueEventListener(burnRateListener);
+    }
+
+    private void updateBurnRateUi(double burnRate, int activeCount, double monthlyBudget) {
+        double annualProjected = burnRate * 12.0;
+        int percentUsed = monthlyBudget > 0
+                ? (int) Math.round((burnRate / monthlyBudget) * 100.0) : 0;
+        int clampedProgress = Math.max(0, Math.min(100, percentUsed));
+        double remaining = Math.max(0.0, monthlyBudget - burnRate);
+
+        binding.txtMonthlyTotal.setText(String.format(Locale.US, "$%.2f", burnRate));
+        binding.txtAnnualTotal.setText(
+                String.format(Locale.US, "$%,.2f projected this year", annualProjected)
+        );
+        binding.tvActiveChip.setText(activeCount + " active");
+        binding.progressBudget.setProgress(clampedProgress);
+        binding.tvBudgetUsed.setText(
+                String.format(Locale.US, "Budget $%.0f of $%.0f", burnRate, monthlyBudget)
+        );
+        binding.tvBudgetRemaining.setText(
+                String.format(Locale.US, "%d%% · $%.2f left", percentUsed, remaining)
+        );
     }
 
     private void bindUserGreetingAndAvatar() {
@@ -139,6 +213,9 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (userSummaryRef != null && burnRateListener != null) {
+            userSummaryRef.removeEventListener(burnRateListener);
+        }
         binding = null;
     }
 }
