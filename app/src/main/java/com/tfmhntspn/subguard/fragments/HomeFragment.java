@@ -3,15 +3,20 @@ package com.tfmhntspn.subguard.fragments;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -25,6 +30,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentHomeBinding;
 
+import java.util.Calendar;
 import java.util.Locale;
 
 public class HomeFragment extends Fragment {
@@ -108,11 +114,12 @@ public class HomeFragment extends Fragment {
                         ? budgetVal : DEFAULT_MONTHLY_BUDGET;
 
                 updateBurnRateUi(burnRate, activeCount, monthlyBudget);
+                updateUpcomingRenewals(snapshot.child("subscriptions"));
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.w(TAG, "Failed to read burnRate from Firebase", error.toException());
+                Log.w(TAG, "Failed to read dashboard data from Firebase", error.toException());
             }
         };
 
@@ -138,6 +145,67 @@ public class HomeFragment extends Fragment {
         binding.tvBudgetRemaining.setText(
                 String.format(Locale.US, "%d%% · $%.2f left", percentUsed, remaining)
         );
+    }
+
+    /**
+     * Checks each subscription's chargeDay (1..31). Shows it if it is 1 to 7 days away,
+     * and removes it on the day of the charge (daysUntil == 0).
+     */
+    private void updateUpcomingRenewals(@NonNull DataSnapshot subscriptionsSnapshot) {
+        binding.layoutUpcomingRenewals.removeAllViews();
+        int todayDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+        int daysInMonth = Calendar.getInstance().getActualMaximum(Calendar.DAY_OF_MONTH);
+        int count = 0;
+
+        for (DataSnapshot sub : subscriptionsSnapshot.getChildren()) {
+            String name = sub.child("name").getValue(String.class);
+            Double price = sub.child("price").getValue(Double.class);
+            Integer chargeDay = sub.child("chargeDay").getValue(Integer.class);
+            if (name == null || chargeDay == null) continue;
+
+            int daysUntil = chargeDay - todayDay;
+            if (daysUntil < 0) {
+                daysUntil += daysInMonth;
+            }
+
+            // Show only 1 to 7 days before charge; removed when daysUntil == 0 (charge day)
+            if (daysUntil >= 1 && daysUntil <= 7) {
+                addUpcomingRenewalRow(name, price != null ? price : 0.0, daysUntil);
+                count++;
+            }
+        }
+
+        binding.tvNoUpcomingRenewals.setVisibility(count == 0 ? View.VISIBLE : View.GONE);
+    }
+
+    private void addUpcomingRenewalRow(String name, double price, int daysUntil) {
+        Context context = requireContext();
+        int pad = Math.round(14 * context.getResources().getDisplayMetrics().density);
+
+        LinearLayout row = new LinearLayout(context);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = pad / 2;
+        row.setLayoutParams(params);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setBackgroundResource(R.drawable.bg_card_rounded);
+        row.setPadding(pad, pad, pad, pad);
+
+        TextView titleView = new TextView(context);
+        titleView.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        titleView.setText(String.format(Locale.US, "%s  ·  $%.2f", name, price));
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.text_primary));
+        titleView.setTypeface(titleView.getTypeface(), Typeface.BOLD);
+
+        TextView daysView = new TextView(context);
+        daysView.setText(daysUntil == 1 ? "In 1 day" : "In " + daysUntil + " days");
+        daysView.setTextColor(ContextCompat.getColor(context, R.color.accent_green_text));
+        daysView.setTypeface(daysView.getTypeface(), Typeface.BOLD);
+
+        row.addView(titleView);
+        row.addView(daysView);
+        binding.layoutUpcomingRenewals.addView(row);
     }
 
     private void bindUserGreetingAndAvatar() {

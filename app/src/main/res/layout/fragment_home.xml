@@ -314,7 +314,24 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <!-- Dynamic Upcoming Renewals Container (1 to 7 days before charge) -->
+        <LinearLayout
+            android:id="@+id/layout_upcoming_renewals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
+        <TextView
+            android:id="@+id/tv_no_upcoming_renewals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_card_rounded"
+            android:gravity="center"
+            android:padding="18dp"
+            android:text="No upcoming renewals in the next 7 days"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
 
         <!-- Top Categories Card -->
         <LinearLayout
