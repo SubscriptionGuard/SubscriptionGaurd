@@ -14,9 +14,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentAddRoommateBinding;
+import com.tfmhntspn.subguard.adapters.ConnectionRequestAdapter;
+
+import java.util.HashMap;
 
 public class AddRoommateFragment extends Fragment {
 
@@ -34,12 +38,44 @@ public class AddRoommateFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        binding.rvSentRequests.setLayoutManager(
+                new LinearLayoutManager(requireContext())
+        );
+
+        ConnectionRequestAdapter adapter = new ConnectionRequestAdapter(
+                new HashMap<>(),
+                connection -> {
+                    Toast.makeText(
+                            requireContext(),
+                            "Connection cancellation will be available when Firebase is connected.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+        );
+
+        binding.rvSentRequests.setAdapter(adapter);
+        updateEmptyState(adapter);
+
+
         binding.btnBack.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
 
         binding.btnSendRequest.setOnClickListener(v -> {
-            String id = binding.etRoommateId.getText() != null
-                    ? binding.etRoommateId.getText().toString().trim() : "";
+            String id = binding.etConnectionId.getText() != null
+                    ? binding.etConnectionId.getText().toString().trim() : "";
+
+            if (id.isEmpty()) {
+                binding.etConnectionId.setError("Please enter a SubscriptionGuard ID");
+                return;
+            }
+
+            if (!id.matches("SG-[0-9]{6}")) {
+                binding.etConnectionId.setError("Use the format SG-123456");
+                return;
+            }
+
+            binding.etConnectionId.setError(null);
+
             Toast.makeText(
                     requireContext(),
                     "Invite sent to roommate (" + id + ")",
@@ -65,13 +101,19 @@ public class AddRoommateFragment extends Fragment {
             startActivity(Intent.createChooser(shareIntent, "Share SubscriptionGuard ID"));
         });
 
-        binding.cardSentRequestPriya.setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigate(R.id.action_addRoommateFragment_to_inviteApprovalFragment));
+    }
 
-        binding.btnCancelRequest.setOnClickListener(v -> {
-            binding.cardSentRequestPriya.setVisibility(View.GONE);
-            Toast.makeText(requireContext(), "Invite cancelled", Toast.LENGTH_SHORT).show();
-        });
+    private void updateEmptyState(ConnectionRequestAdapter adapter) {
+
+        boolean isEmpty = adapter.getItemCount() == 0;
+
+        binding.tvNoSentRequests.setVisibility(
+                isEmpty ? View.VISIBLE : View.GONE
+        );
+
+        binding.rvSentRequests.setVisibility(
+                isEmpty ? View.GONE : View.VISIBLE
+        );
     }
 
     @Override

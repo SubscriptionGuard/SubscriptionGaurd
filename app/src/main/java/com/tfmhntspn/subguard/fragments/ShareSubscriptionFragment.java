@@ -10,13 +10,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentShareSubscriptionBinding;
+import com.tfmhntspn.subguard.utils.SplitCalculator;
+import com.tfmhntspn.subguard.adapters.SplitParticipantAdapter;
+import com.tfmhntspn.subguard.models.SplitParticipant;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class ShareSubscriptionFragment extends Fragment {
 
     private FragmentShareSubscriptionBinding binding;
+    private SplitParticipantAdapter participantAdapter;
+    private final List<SplitParticipant> participants = new ArrayList<>();
+
+    private long selectedPriceCents = 1699;
+    private boolean isCustomSplit = false;
 
     @Nullable
     @Override
@@ -27,61 +40,194 @@ public class ShareSubscriptionFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Back button
         binding.btnBack.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
 
+        // Set up participant RecyclerView
+        binding.rvSplitParticipants.setLayoutManager(
+                new LinearLayoutManager(requireContext())
+        );
+
+        participantAdapter = new SplitParticipantAdapter(
+                this::validateCurrentSplit
+        );
+
+        binding.rvSplitParticipants.setAdapter(participantAdapter);
+
+        // Temporary participants until connections are loaded
+        participants.add(new SplitParticipant("demo-owner", "You", 0));
+        participants.add(new SplitParticipant("demo-maya", "Maya", 0));
+        participants.add(new SplitParticipant("demo-jordan", "Jordan", 0));
+
+        // Calculate initial Netflix split
+        updateEqualSplit();
+
+        // Subscription selection
         binding.pickNetflix.setOnClickListener(v -> {
-            binding.pickNetflix.setBackgroundResource(R.drawable.bg_pill_green);
-            binding.pickSpotify.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.pickCrave.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.tvSplitHeader.setText("2 · SPLIT $16.99 WITH");
-            binding.tvShareYou.setText("$5.67");
-            binding.tvShareMaya.setText("$5.66");
-            binding.tvShareJordan.setText("$5.66");
+            selectedPriceCents = 1699;
+            selectSubscription(0);
         });
 
         binding.pickSpotify.setOnClickListener(v -> {
-            binding.pickNetflix.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.pickSpotify.setBackgroundResource(R.drawable.bg_pill_green);
-            binding.pickCrave.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.tvSplitHeader.setText("2 · SPLIT $11.99 WITH");
-            binding.tvShareYou.setText("$4.00");
-            binding.tvShareMaya.setText("$4.00");
-            binding.tvShareJordan.setText("$3.99");
+            selectedPriceCents = 1199;
+            selectSubscription(1);
         });
 
         binding.pickCrave.setOnClickListener(v -> {
-            binding.pickNetflix.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.pickSpotify.setBackgroundResource(R.drawable.bg_card_rounded);
-            binding.pickCrave.setBackgroundResource(R.drawable.bg_pill_green);
-            binding.tvSplitHeader.setText("2 · SPLIT $19.99 WITH");
-            binding.tvShareYou.setText("$6.67");
-            binding.tvShareMaya.setText("$6.66");
-            binding.tvShareJordan.setText("$6.66");
+            selectedPriceCents = 1999;
+            selectSubscription(2);
         });
 
+        // Equal Split
         binding.btnSplitEqual.setOnClickListener(v -> {
-            binding.btnSplitEqual.setBackgroundResource(R.drawable.bg_pill_green);
-            binding.btnSplitCustom.setBackgroundResource(R.drawable.bg_pill_elevated);
+
+            isCustomSplit = false;
+
+            binding.btnSplitEqual.setBackgroundResource(
+                    R.drawable.bg_pill_green
+            );
+
+            binding.btnSplitCustom.setBackgroundResource(
+                    R.drawable.bg_pill_elevated
+            );
+
+            updateEqualSplit();
+            participantAdapter.setCustomMode(false);
+            validateCurrentSplit();
         });
 
+        // Custom Split
         binding.btnSplitCustom.setOnClickListener(v -> {
-            binding.btnSplitCustom.setBackgroundResource(R.drawable.bg_pill_green);
-            binding.btnSplitEqual.setBackgroundResource(R.drawable.bg_pill_elevated);
+
+            isCustomSplit = true;
+
+            binding.btnSplitCustom.setBackgroundResource(
+                    R.drawable.bg_pill_green
+            );
+
+            binding.btnSplitEqual.setBackgroundResource(
+                    R.drawable.bg_pill_elevated
+            );
+
+            participantAdapter.setCustomMode(true);
+            validateCurrentSplit();
         });
 
+        // Submit proposed split
         binding.btnSendForApproval.setOnClickListener(v -> {
+
+            if (!isSplitValid()) {
+                Toast.makeText(
+                        requireContext(),
+                        "Split amounts must equal the subscription total.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
             Toast.makeText(
                     requireContext(),
-                    "Split sent to Maya and Jordan for approval!",
-                    Toast.LENGTH_SHORT
+                    "Split is valid. Firebase saving is not connected yet.",
+                    Toast.LENGTH_LONG
             ).show();
-            NavHostFragment.findNavController(this).navigateUp();
         });
     }
+
+
+    private void selectSubscription(int selected) {
+
+        binding.pickNetflix.setBackgroundResource(
+                selected == 0
+                        ? R.drawable.bg_pill_green
+                        : R.drawable.bg_card_rounded
+        );
+
+        binding.pickSpotify.setBackgroundResource(
+                selected == 1
+                        ? R.drawable.bg_pill_green
+                        : R.drawable.bg_card_rounded
+        );
+
+        binding.pickCrave.setBackgroundResource(
+                selected == 2
+                        ? R.drawable.bg_pill_green
+                        : R.drawable.bg_card_rounded
+        );
+
+        String price = String.format(
+                Locale.US,
+                "$%.2f",
+                selectedPriceCents / 100.0
+        );
+
+        binding.tvSplitHeader.setText(
+                "2 · SPLIT " + price + " WITH"
+        );
+
+        if (!isCustomSplit) {
+            updateEqualSplit();
+        }
+
+        validateCurrentSplit();
+    }
+
+    private void updateEqualSplit() {
+
+        if (participants.isEmpty()) {
+            participantAdapter.updateParticipants(participants);
+            return;
+        }
+
+        long[] amounts = SplitCalculator.calculateEqualSplit(
+                selectedPriceCents,
+                participants.size()
+        );
+
+        for (int i = 0; i < participants.size(); i++) {
+            participants.get(i).setAmountCents(amounts[i]);
+        }
+
+        participantAdapter.updateParticipants(participants);
+    }
+
+    private boolean isSplitValid() {
+
+        if (participants.isEmpty() || selectedPriceCents <= 0) {
+            return false;
+        }
+
+        if (!isCustomSplit) {
+            return true;
+        }
+
+        long[] amounts = participantAdapter.getCustomAmountsCents();
+
+        return amounts != null &&
+                SplitCalculator.validateCustomSplit(
+                        selectedPriceCents,
+                        amounts
+                );
+    }
+
+    private void validateCurrentSplit() {
+
+        if (binding == null) {
+            return;
+        }
+
+        binding.btnSendForApproval.setEnabled(isSplitValid());
+
+        binding.btnSendForApproval.setAlpha(
+                isSplitValid() ? 1.0f : 0.5f
+        );
+    }
+
+
 
     @Override
     public void onDestroyView() {
