@@ -5,7 +5,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.view.View;
+import android.content.res.ColorStateList;
 
+
+import androidx.core.content.ContextCompat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -17,6 +21,7 @@ import com.tfmhntspn.subguard.databinding.FragmentShareSubscriptionBinding;
 import com.tfmhntspn.subguard.utils.SplitCalculator;
 import com.tfmhntspn.subguard.adapters.SplitParticipantAdapter;
 import com.tfmhntspn.subguard.models.SplitParticipant;
+import com.tfmhntspn.subguard.adapters.ConnectionSelectionAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +31,7 @@ public class ShareSubscriptionFragment extends Fragment {
 
     private FragmentShareSubscriptionBinding binding;
     private SplitParticipantAdapter participantAdapter;
+    private ConnectionSelectionAdapter connectionAdapter;
     private final List<SplitParticipant> participants = new ArrayList<>();
 
     private long selectedPriceCents = 1699;
@@ -59,13 +65,45 @@ public class ShareSubscriptionFragment extends Fragment {
 
         binding.rvSplitParticipants.setAdapter(participantAdapter);
 
-        // Temporary participants until connections are loaded
-        participants.add(new SplitParticipant("demo-owner", "You", 0));
-        participants.add(new SplitParticipant("demo-maya", "Maya", 0));
-        participants.add(new SplitParticipant("demo-jordan", "Jordan", 0));
+        // Set up the connection selection list
+        binding.rvSelectConnections.setLayoutManager(
+                new LinearLayoutManager(requireContext())
+        );
 
-        // Calculate initial Netflix split
-        updateEqualSplit();
+        connectionAdapter = new ConnectionSelectionAdapter(
+                selectedConnections -> {
+
+                    // Rebuild the participant list when selection changes
+                    updateSelectedParticipants(selectedConnections);
+                }
+        );
+
+        binding.rvSelectConnections.setAdapter(connectionAdapter);
+
+        // Temporary connections until Firebase is available
+        List<ConnectionSelectionAdapter.ConnectionOption> connections =
+                new ArrayList<>();
+
+        connections.add(
+                new ConnectionSelectionAdapter.ConnectionOption(
+                        "demo-maya", "Maya"
+                )
+        );
+
+        connections.add(
+                new ConnectionSelectionAdapter.ConnectionOption(
+                        "demo-jordan", "Jordan"
+                )
+        );
+
+        connections.add(
+                new ConnectionSelectionAdapter.ConnectionOption(
+                        "demo-sarah", "Sarah"
+                )
+        );
+
+        connectionAdapter.updateConnections(connections);
+
 
         // Subscription selection
         binding.pickNetflix.setOnClickListener(v -> {
@@ -139,6 +177,40 @@ public class ShareSubscriptionFragment extends Fragment {
     }
 
 
+    private void updateSelectedParticipants(
+            List<ConnectionSelectionAdapter.ConnectionOption> selectedConnections) {
+
+        participants.clear();
+
+        // Always include the subscription payer
+        participants.add(
+                new SplitParticipant("demo-owner", "You", 0)
+        );
+
+        // Add each selected connection
+        for (ConnectionSelectionAdapter.ConnectionOption connection
+                : selectedConnections) {
+
+            participants.add(
+                    new SplitParticipant(
+                            connection.userId,
+                            connection.displayName,
+                            0
+                    )
+            );
+        }
+
+        if (isCustomSplit) {
+            participantAdapter.updateParticipants(participants);
+        } else {
+            updateEqualSplit();
+        }
+
+        validateCurrentSplit();
+    }
+
+
+
     private void selectSubscription(int selected) {
 
         binding.pickNetflix.setBackgroundResource(
@@ -169,6 +241,8 @@ public class ShareSubscriptionFragment extends Fragment {
                 "2 · SPLIT " + price + " WITH"
         );
 
+        participantAdapter.clearCustomAmounts();
+
         if (!isCustomSplit) {
             updateEqualSplit();
         }
@@ -195,9 +269,11 @@ public class ShareSubscriptionFragment extends Fragment {
         participantAdapter.updateParticipants(participants);
     }
 
+
     private boolean isSplitValid() {
 
-        if (participants.isEmpty() || selectedPriceCents <= 0) {
+        // Require the payer and at least one other participant
+        if (participants.size() < 2 || selectedPriceCents <= 0) {
             return false;
         }
 
@@ -214,19 +290,133 @@ public class ShareSubscriptionFragment extends Fragment {
                 );
     }
 
+
+    private void updateSplitSummary() {
+
+        // Equal split: show only subscription total
+        if (!isCustomSplit) {
+
+            binding.layoutEqualTotal.setVisibility(View.VISIBLE);
+            binding.layoutAllocationProgress.setVisibility(View.GONE);
+
+            binding.tvSubscriptionTotal.setText(
+                    formatMoney(selectedPriceCents)
+            );
+
+            return;
+        }
+
+        // Custom split: show allocation progress
+        binding.layoutEqualTotal.setVisibility(View.GONE);
+        binding.layoutAllocationProgress.setVisibility(View.VISIBLE);
+
+        long allocated = participantAdapter.getTotalAllocatedCents();
+
+        // Invalid or excessively large input
+        if (allocated < 0) {
+
+            binding.tvAllocationAmount.setText("Invalid amount");
+
+            binding.progressAllocation.setProgress(0);
+
+            binding.tvAllocationStatus.setText(
+                    "Enter valid amounts with up to 2 decimal places"
+            );
+
+            setAllocationColor(R.color.danger_red);
+            return;
+        }
+
+        // Example: $12.00 / $16.99
+        binding.tvAllocationAmount.setText(
+                formatMoney(allocated)
+                        + " / "
+                        + formatMoney(selectedPriceCents)
+        );
+
+        // Convert allocation into a progress percentage
+        int progress = (int) Math.min(
+                1000,
+                (allocated / (double) selectedPriceCents) * 1000
+        );
+
+        binding.progressAllocation.setProgress(progress);
+
+        long difference = selectedPriceCents - allocated;
+
+        if (difference > 0) {
+
+            // Under the total
+            binding.tvAllocationStatus.setText(
+                    formatMoney(difference) + " left to allocate"
+            );
+
+            setAllocationColor(R.color.accent_blue);
+
+        } else if (difference == 0) {
+
+            // Exactly matches the subscription cost
+            binding.tvAllocationStatus.setText(
+                    participants.size() >= 2
+                            ? "Ready to send for approval"
+                            : "Select at least one connection"
+            );
+
+            setAllocationColor(R.color.accent_green_text);
+
+        } else {
+
+            // Over the subscription cost
+            binding.tvAllocationStatus.setText(
+                    formatMoney(-difference) + " over the total"
+            );
+
+            setAllocationColor(R.color.danger_red);
+        }
+    }
+
+    private void setAllocationColor(int colorResource) {
+
+        int color = ContextCompat.getColor(
+                requireContext(),
+                colorResource
+        );
+
+        binding.tvAllocationAmount.setTextColor(color);
+        binding.tvAllocationStatus.setTextColor(color);
+
+        binding.progressAllocation.setProgressTintList(
+                ColorStateList.valueOf(color)
+        );
+    }
+
+    private String formatMoney(long cents) {
+        return String.format(
+                Locale.US,
+                "$%d.%02d",
+                cents / 100,
+                cents % 100
+        );
+    }
+
+
+
+
     private void validateCurrentSplit() {
 
         if (binding == null) {
             return;
         }
 
-        binding.btnSendForApproval.setEnabled(isSplitValid());
+        updateSplitSummary();
 
+        boolean valid = isSplitValid();
+
+        binding.btnSendForApproval.setEnabled(valid);
         binding.btnSendForApproval.setAlpha(
-                isSplitValid() ? 1.0f : 0.5f
+                valid ? 1.0f : 0.5f
         );
     }
-
 
 
     @Override
@@ -234,4 +424,6 @@ public class ShareSubscriptionFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
+
 }

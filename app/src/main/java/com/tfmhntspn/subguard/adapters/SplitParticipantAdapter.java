@@ -139,6 +139,11 @@ public class SplitParticipantAdapter
         notifyDataSetChanged();
     }
 
+    public void clearCustomAmounts() {
+        customInputs.clear();
+        notifyDataSetChanged();
+    }
+
     public boolean isCustomMode() {
         return customMode;
     }
@@ -168,6 +173,40 @@ public class SplitParticipantAdapter
         }
 
         return amounts;
+    }
+
+
+    public long getTotalAllocatedCents() {
+
+        long total = 0;
+
+        for (SplitParticipant participant : participants) {
+
+            String input = customInputs.get(participant.getUserId());
+
+            // Empty fields contribute zero while the user is typing
+            if (input == null || input.trim().isEmpty()) {
+                continue;
+            }
+
+            // Invalid values must not be treated as valid money
+            if (!input.matches("\\d+(\\.\\d{1,2})?")) {
+                return -1;
+            }
+
+            try {
+                long amount = new BigDecimal(input)
+                        .movePointRight(2)
+                        .longValueExact();
+
+                total = Math.addExact(total, amount);
+
+            } catch (ArithmeticException e) {
+                return -1;
+            }
+        }
+
+        return total;
     }
 
     private String formatMoney(long cents) {
