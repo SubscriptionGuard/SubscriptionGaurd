@@ -51,6 +51,15 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation("com.google.firebase:firebase-database")
 
+    // Background tasks for subscription renewal reminders
+    implementation("androidx.work:work-runtime:2.12.0")
+
+
+    // ML Kit Document Scanner
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
+    // ML Kit Text Recognition v2
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.2")
+
     // Credential Manager libraries for Google Sign-In
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
