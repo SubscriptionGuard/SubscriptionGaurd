@@ -71,7 +71,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="We found 4 details"
+                    android:text="Receipt scanned"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -79,7 +79,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Read on-device · nothing uploaded"
+                    android:text="Review the detected text before saving"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -123,7 +123,7 @@
                     android:background="@null"
                     android:importantForAutofill="no"
                     android:inputType="text"
-                    android:text="Spotify"
+                    android:hint="Enter service name"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -135,7 +135,7 @@
                 android:background="@drawable/bg_pill_green"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="Found"
+                android:text="Please check"
                 android:textColor="@color/accent_green_text"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -170,8 +170,8 @@
                     android:layout_height="wrap_content"
                     android:background="@null"
                     android:importantForAutofill="no"
-                    android:inputType="text"
-                    android:text="$11.99 CAD"
+                    android:inputType="numberDecimal"
+                    android:hint="e.g. 11.99"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -183,7 +183,7 @@
                 android:background="@drawable/bg_pill_green"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="Found"
+                android:text="Please check"
                 android:textColor="@color/accent_green_text"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -218,8 +218,9 @@
                     android:layout_height="wrap_content"
                     android:background="@null"
                     android:importantForAutofill="no"
-                    android:inputType="text"
-                    android:text="Oct 27, 2026"
+                    android:hint="Select next renewal date"
+                    android:focusable="false"
+                    android:clickable="true"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -231,7 +232,7 @@
                 android:background="@drawable/bg_pill_green"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="Found"
+                android:text="Please check"
                 android:textColor="@color/accent_green_text"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -260,14 +261,12 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Monthly"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                <Spinner
+                    android:id="@+id/spinner_scanned_billing_cycle"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:entries="@array/billing_cycle_options" />
+
             </LinearLayout>
 
             <TextView
@@ -305,14 +304,13 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Streaming"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/spinner_scanned_category"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:entries="@array/subscription_category_options" />
+
             </LinearLayout>
         </LinearLayout>
 
