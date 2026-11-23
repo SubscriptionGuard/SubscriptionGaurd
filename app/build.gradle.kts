@@ -47,9 +47,9 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Firebase Auth & Realtime Database (versions managed by BoM)
+    // Firebase Auth & Realtime Database
     implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-database")
+    implementation(libs.firebase.database)
 
     // Background tasks for subscription renewal reminders
     implementation("androidx.work:work-runtime:2.12.0")
@@ -64,7 +64,6 @@ dependencies {
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
-    implementation(libs.firebase.database)
 
     // Jetpack Navigation Component
     implementation(libs.navigation.fragment.ktx)
