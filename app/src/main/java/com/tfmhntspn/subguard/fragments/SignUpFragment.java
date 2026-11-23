@@ -28,8 +28,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentSignUpBinding;
+import com.tfmhntspn.subguard.repositories.UserRepository;
+
+
 
 import java.util.concurrent.Executors;
 
@@ -37,8 +41,10 @@ public class SignUpFragment extends Fragment {
 
     private static final String TAG = "SignUpFragment";
 
+
     private FragmentSignUpBinding binding;
     private FirebaseAuth auth;
+    private UserRepository userRepository;
 
     @Nullable
     @Override
@@ -52,6 +58,9 @@ public class SignUpFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         auth = FirebaseAuth.getInstance();
+
+
+        userRepository = new UserRepository();
 
         binding.btnBack.setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
@@ -101,9 +110,59 @@ public class SignUpFragment extends Fragment {
                                         .apply();
                             }
 
-                            Toast.makeText(requireContext(), "Account created!", Toast.LENGTH_SHORT).show();
-                            NavHostFragment.findNavController(this)
-                                    .navigate(R.id.action_signUpFragment_to_homeFragment);
+
+
+                            if (user != null) {
+
+                                userRepository.saveUserProfile(
+                                        user,
+                                        fullNameText,
+                                        emailText,
+                                        new UserRepository.SaveProfileCallback() {
+
+                                            @Override
+                                            public void onSuccess() {
+
+                                                if (!isAdded()) return;
+
+                                                Toast.makeText(
+                                                        requireContext(),
+                                                        "Account created!",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+
+                                                NavHostFragment.findNavController(
+                                                        SignUpFragment.this
+                                                ).navigate(
+                                                        R.id.action_signUpFragment_to_homeFragment
+                                                );
+                                            }
+
+                                            @Override
+                                            public void onFailure(String error) {
+
+                                                if (!isAdded()) return;
+
+                                                Toast.makeText(
+                                                        requireContext(),
+                                                        "Account created, but profile was not saved: "
+                                                                + error,
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                            }
+                                        }
+                                );
+
+                            } else {
+
+                                Toast.makeText(
+                                        requireContext(),
+                                        "Account created, but user information is unavailable.",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            }
+
+
                         } else {
                             String msg = task.getException() != null ? task.getException().getMessage() : "";
                             Toast.makeText(requireContext(), "Sign Up Failed: " + msg, Toast.LENGTH_SHORT).show();
@@ -172,25 +231,89 @@ public class SignUpFragment extends Fragment {
         }
     }
 
+
     private void firebaseAuthWithGoogle(String idToken) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+
+        AuthCredential credential =
+                GoogleAuthProvider.getCredential(idToken, null);
+
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(requireActivity(), task -> {
+
                     if (!isAdded()) return;
+
                     if (task.isSuccessful()) {
-                        requireContext()
-                                .getSharedPreferences(HomeFragment.PREFS_NAME, Context.MODE_PRIVATE)
-                                .edit()
-                                .remove(HomeFragment.KEY_CUSTOM_NAME)
-                                .apply();
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.action_signUpFragment_to_homeFragment);
+
+                        FirebaseUser user = auth.getCurrentUser();
+
+                        if (user == null) {
+                            Toast.makeText(
+                                    requireContext(),
+                                    "Google account information unavailable.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            return;
+                        }
+
+                        String name = user.getDisplayName();
+                        String email = user.getEmail();
+
+                        userRepository.saveUserProfile(
+                                user,
+                                name,
+                                email,
+                                new UserRepository.SaveProfileCallback() {
+
+                                    @Override
+                                    public void onSuccess() {
+
+                                        if (!isAdded()) return;
+
+                                        requireContext()
+                                                .getSharedPreferences(
+                                                        HomeFragment.PREFS_NAME,
+                                                        Context.MODE_PRIVATE
+                                                )
+                                                .edit()
+                                                .remove(
+                                                        HomeFragment.KEY_CUSTOM_NAME
+                                                )
+                                                .apply();
+
+                                        NavHostFragment
+                                                .findNavController(
+                                                        SignUpFragment.this
+                                                )
+                                                .navigate(
+                                                        R.id.action_signUpFragment_to_homeFragment
+                                                );
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+
+                                        if (!isAdded()) return;
+
+                                        Toast.makeText(
+                                                requireContext(),
+                                                "Signed in, but profile setup failed: "
+                                                        + error,
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                    }
+                                }
+                        );
+
                     } else {
-                        String msg = task.getException() != null ? task.getException().getMessage() : "";
+
+                        String message = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Unknown error";
+
                         Toast.makeText(
                                 requireContext(),
-                                "Authentication Failed: " + msg,
-                                Toast.LENGTH_SHORT
+                                "Google Sign-In failed: " + message,
+                                Toast.LENGTH_LONG
                         ).show();
                     }
                 });
