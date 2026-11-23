@@ -29,7 +29,7 @@
                     android:id="@+id/tv_greeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Hi, Sophia 👋"
+                    android:text="Hi 👋"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -60,7 +60,6 @@
                 android:layout_height="40dp"
                 android:background="@drawable/bg_circle_green"
                 android:gravity="center"
-                android:text="SD"
                 android:textColor="@color/accent_green_text"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -104,7 +103,7 @@
                         android:background="@drawable/bg_pill_green"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="9 active"
+                        android:text="0 active"
                         android:textColor="@color/accent_green_text"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -121,7 +120,7 @@
                         android:id="@+id/txt_monthly_total"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$127.48"
+                        android:text="$0.00"
                         android:textColor="@color/text_primary"
                         android:textSize="36sp"
                         android:textStyle="bold" />
@@ -141,7 +140,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="$1,529.76 projected this year"
+                    android:text="$0.00 projected this year"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
