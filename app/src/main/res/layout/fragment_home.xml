@@ -390,7 +390,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="● Streaming $63.96"
+                    android:text="● Streaming $0.00"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp" />
 
@@ -398,14 +398,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="● Utilities $46.50"
+                    android:text="● Utilities $0.00"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="● Food $17.02"
+                    android:text="● Food $0.00"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp" />
             </LinearLayout>

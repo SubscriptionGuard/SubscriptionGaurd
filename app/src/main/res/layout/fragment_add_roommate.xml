@@ -72,11 +72,12 @@
             android:layout_height="52dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/bg_input_field"
+            android:hint="e.g. SG-XXXX-XX"
             android:importantForAutofill="no"
             android:inputType="textCapCharacters"
             android:paddingHorizontal="16dp"
-            android:text="SG-7K4P-19"
             android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
             android:textSize="16sp"
             android:textStyle="bold" />
 

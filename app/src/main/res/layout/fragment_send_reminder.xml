@@ -283,11 +283,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@null"
+                android:hint="Write a payment reminder message…"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine"
                 android:lineSpacingExtra="4dp"
-                android:text="Hey Maya! Quick reminder: your share of Telus WiFi ($10.00) and October hydro ($16.50) comes to $26.50. E-transfer whenever you get a chance. Thanks! – Sophia"
                 android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
                 android:textSize="14sp" />
 
             <TextView
