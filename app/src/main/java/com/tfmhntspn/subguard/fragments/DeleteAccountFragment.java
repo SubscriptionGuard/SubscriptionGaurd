@@ -51,20 +51,15 @@ public class DeleteAccountFragment extends Fragment {
         if (user == null) return;
 
         FirebaseDatabase.getInstance()
-                .getReference("users")
+                .getReference("subscriptions")
                 .child(user.getUid())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (binding == null) return;
-                        Long countVal = snapshot.child(HomeFragment.FIELD_ACTIVE_COUNT).getValue(Long.class);
-                        long subCount = countVal != null ? Math.max(0L, countVal) : snapshot.child("subscriptions").getChildrenCount();
+                        long subCount = snapshot.getChildrenCount();
                         String subLabel = subCount == 1 ? "1 subscription" : subCount + " subscriptions";
                         binding.tvDeleteSubscriptionsCount.setText("✕   " + subLabel);
-
-                        long splitsCount = snapshot.child("splits").getChildrenCount();
-                        String splitLabel = splitsCount == 1 ? "1 roommate split" : splitsCount + " roommate splits";
-                        binding.tvDeleteSplitsCount.setText("✕   " + splitLabel);
                     }
 
                     @Override
@@ -93,12 +88,11 @@ public class DeleteAccountFragment extends Fragment {
 
         binding.btnConfirmDelete.setEnabled(false);
         String uid = user.getUid();
-        DatabaseReference userRef = FirebaseDatabase.getInstance()
-                .getReference("users")
-                .child(uid);
+        DatabaseReference db = FirebaseDatabase.getInstance().getReference();
 
-        // 2. Remove user's data from Firebase Realtime Database, then delete Firebase Auth user
-        userRef.removeValue().addOnCompleteListener(dbTask ->
+        // 2. Remove user's subscriptions/{uid} and users/{uid} nodes, then delete Firebase Auth user
+        db.child("subscriptions").child(uid).removeValue();
+        db.child("users").child(uid).removeValue().addOnCompleteListener(dbTask ->
                 user.delete().addOnCompleteListener(authTask -> {
                     if (!isAdded()) return;
                     auth.signOut();
