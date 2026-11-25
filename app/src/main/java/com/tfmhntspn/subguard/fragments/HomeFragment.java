@@ -29,9 +29,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.tfmhntspn.subguard.R;
 import com.tfmhntspn.subguard.databinding.FragmentHomeBinding;
+import com.tfmhntspn.subguard.models.Subscription;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class HomeFragment extends Fragment {
 
@@ -46,8 +53,14 @@ public class HomeFragment extends Fragment {
     private static final double DEFAULT_MONTHLY_BUDGET = 150.0;
 
     private FragmentHomeBinding binding;
-    private DatabaseReference userSummaryRef;
-    private ValueEventListener burnRateListener;
+    private DatabaseReference subscriptionsRef;
+    private ValueEventListener subscriptionsListener;
+    private DatabaseReference userRef;
+    private ValueEventListener userBudgetListener;
+
+    private double currentMonthlyBudget = DEFAULT_MONTHLY_BUDGET;
+    private double currentBurnRate = 0.0;
+    private int currentActiveCount = 0;
 
     @Nullable
     @Override
@@ -62,7 +75,7 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         bindUserGreetingAndAvatar();
-        observeBurnRateFromFirebase();
+        observeDashboardDataFromFirebase();
 
         binding.btnThemeToggle.setOnClickListener(v -> {
             int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
@@ -88,42 +101,137 @@ public class HomeFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigate(R.id.action_homeFragment_to_subscriptionsFragment));
     }
 
-    private void observeBurnRateFromFirebase() {
+    private void observeDashboardDataFromFirebase() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        currentMonthlyBudget = prefs.getFloat(ProfileFragment.KEY_MONTHLY_BUDGET, (float) DEFAULT_MONTHLY_BUDGET);
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
-            updateBurnRateUi(0.0, 0, DEFAULT_MONTHLY_BUDGET);
+            updateBurnRateUi(0.0, 0, currentMonthlyBudget);
+            updateTopCategoriesUi(0.0, 0.0, 0.0);
+            binding.tvNoUpcomingRenewals.setVisibility(View.VISIBLE);
             return;
         }
 
-        userSummaryRef = FirebaseDatabase.getInstance()
-                .getReference("users")
-                .child(currentUser.getUid());
+        String uid = currentUser.getUid();
 
-        burnRateListener = new ValueEventListener() {
+        // 1. Observe user's monthlyBudget from users/{uid}
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
+        userBudgetListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (binding == null) return;
-
-                Double burnRateVal = snapshot.child(FIELD_BURN_RATE).getValue(Double.class);
-                Long activeCountVal = snapshot.child(FIELD_ACTIVE_COUNT).getValue(Long.class);
                 Double budgetVal = snapshot.child(FIELD_MONTHLY_BUDGET).getValue(Double.class);
-
-                double burnRate = burnRateVal != null ? Math.max(0.0, burnRateVal) : 0.0;
-                int activeCount = activeCountVal != null ? Math.max(0, activeCountVal.intValue()) : 0;
-                double monthlyBudget = (budgetVal != null && budgetVal > 0)
-                        ? budgetVal : DEFAULT_MONTHLY_BUDGET;
-
-                updateBurnRateUi(burnRate, activeCount, monthlyBudget);
-                updateUpcomingRenewals(snapshot.child("subscriptions"));
+                if (budgetVal != null && budgetVal > 0) {
+                    currentMonthlyBudget = budgetVal;
+                }
+                updateBurnRateUi(currentBurnRate, currentActiveCount, currentMonthlyBudget);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.w(TAG, "Failed to read dashboard data from Firebase", error.toException());
+                Log.w(TAG, "Failed to read user budget", error.toException());
             }
         };
+        userRef.addValueEventListener(userBudgetListener);
 
-        userSummaryRef.addValueEventListener(burnRateListener);
+        // 2. Observe user's subscriptions from subscriptions/{uid} (saved by AddSubscriptionFragment & ReviewScanDetailsFragment)
+        subscriptionsRef = FirebaseDatabase.getInstance().getReference("subscriptions").child(uid);
+        subscriptionsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (binding == null) return;
+
+                double monthlyBurnTotal = 0.0;
+                double streamingMonthly = 0.0;
+                double utilitiesMonthly = 0.0;
+                double foodMonthly = 0.0;
+                int activeCount = 0;
+                int upcomingCount = 0;
+
+                binding.layoutUpcomingRenewals.removeAllViews();
+                Calendar todayCal = getStartOfToday();
+
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    Subscription sub = child.getValue(Subscription.class);
+                    if (sub == null) continue;
+
+                    activeCount++;
+                    double cost = sub.getCost();
+                    double monthlyEquivalent = "Yearly".equalsIgnoreCase(sub.getBillingCycle())
+                            ? cost / 12.0 : cost;
+                    monthlyBurnTotal += monthlyEquivalent;
+
+                    String category = sub.getCategory() != null ? sub.getCategory() : "";
+                    if ("Streaming".equalsIgnoreCase(category)) {
+                        streamingMonthly += monthlyEquivalent;
+                    } else if ("Utilities".equalsIgnoreCase(category)) {
+                        utilitiesMonthly += monthlyEquivalent;
+                    } else if ("Food".equalsIgnoreCase(category)) {
+                        foodMonthly += monthlyEquivalent;
+                    }
+
+                    // Check if nextRenewalDate ("yyyy-MM-dd") is 1 to 7 days away; remove on charge day (<= 0)
+                    int daysUntil = calculateDaysUntilCharge(sub.getNextRenewalDate(), todayCal);
+                    if (daysUntil >= 1 && daysUntil <= 7) {
+                        String name = sub.getName() != null ? sub.getName() : "Subscription";
+                        addUpcomingRenewalRow(name, cost, daysUntil);
+                        upcomingCount++;
+                    }
+                }
+
+                currentBurnRate = Math.round(monthlyBurnTotal * 100.0) / 100.0;
+                currentActiveCount = activeCount;
+
+                updateBurnRateUi(currentBurnRate, currentActiveCount, currentMonthlyBudget);
+                updateTopCategoriesUi(streamingMonthly, utilitiesMonthly, foodMonthly);
+                binding.tvNoUpcomingRenewals.setVisibility(upcomingCount == 0 ? View.VISIBLE : View.GONE);
+
+                // Keep users/{uid}/burnRate and activeCount synced in Firebase
+                Map<String, Object> summaryUpdates = new HashMap<>();
+                summaryUpdates.put(FIELD_BURN_RATE, currentBurnRate);
+                summaryUpdates.put(FIELD_ACTIVE_COUNT, currentActiveCount);
+                userRef.updateChildren(summaryUpdates);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "Failed to read subscriptions", error.toException());
+            }
+        };
+        subscriptionsRef.addValueEventListener(subscriptionsListener);
+    }
+
+    private int calculateDaysUntilCharge(@Nullable String renewalDateStr, @NonNull Calendar todayCal) {
+        if (renewalDateStr == null || renewalDateStr.trim().isEmpty()) {
+            return -1;
+        }
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            Date parsed = sdf.parse(renewalDateStr.trim());
+            if (parsed == null) return -1;
+
+            Calendar chargeCal = getStartOfToday();
+            chargeCal.setTime(parsed);
+            chargeCal.set(Calendar.HOUR_OF_DAY, 0);
+            chargeCal.set(Calendar.MINUTE, 0);
+            chargeCal.set(Calendar.SECOND, 0);
+            chargeCal.set(Calendar.MILLISECOND, 0);
+
+            long diffMillis = chargeCal.getTimeInMillis() - todayCal.getTimeInMillis();
+            return (int) TimeUnit.MILLISECONDS.toDays(diffMillis);
+        } catch (ParseException e) {
+            return -1;
+        }
+    }
+
+    private Calendar getStartOfToday() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal;
     }
 
     private void updateBurnRateUi(double burnRate, int activeCount, double monthlyBudget) {
@@ -147,35 +255,27 @@ public class HomeFragment extends Fragment {
         );
     }
 
-    /**
-     * Checks each subscription's chargeDay (1..31). Shows it if it is 1 to 7 days away,
-     * and removes it on the day of the charge (daysUntil == 0).
-     */
-    private void updateUpcomingRenewals(@NonNull DataSnapshot subscriptionsSnapshot) {
-        binding.layoutUpcomingRenewals.removeAllViews();
-        int todayDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-        int daysInMonth = Calendar.getInstance().getActualMaximum(Calendar.DAY_OF_MONTH);
-        int count = 0;
+    private void updateTopCategoriesUi(double streaming, double utilities, double food) {
+        binding.tvCatStreaming.setText(String.format(Locale.US, "● Streaming $%.2f", streaming));
+        binding.tvCatUtilities.setText(String.format(Locale.US, "● Utilities $%.2f", utilities));
+        binding.tvCatFood.setText(String.format(Locale.US, "● Food $%.2f", food));
 
-        for (DataSnapshot sub : subscriptionsSnapshot.getChildren()) {
-            String name = sub.child("name").getValue(String.class);
-            Double price = sub.child("price").getValue(Double.class);
-            Integer chargeDay = sub.child("chargeDay").getValue(Integer.class);
-            if (name == null || chargeDay == null) continue;
+        double total = streaming + utilities + food;
+        float wStreaming = total > 0 ? (float) Math.max(5.0, (streaming / total) * 100.0) : 1f;
+        float wUtilities = total > 0 ? (float) Math.max(5.0, (utilities / total) * 100.0) : 1f;
+        float wFood = total > 0 ? (float) Math.max(5.0, (food / total) * 100.0) : 1f;
 
-            int daysUntil = chargeDay - todayDay;
-            if (daysUntil < 0) {
-                daysUntil += daysInMonth;
-            }
+        setBarWeight(binding.barCatStreaming, wStreaming);
+        setBarWeight(binding.barCatUtilities, wUtilities);
+        setBarWeight(binding.barCatFood, wFood);
+    }
 
-            // Show only 1 to 7 days before charge; removed when daysUntil == 0 (charge day)
-            if (daysUntil >= 1 && daysUntil <= 7) {
-                addUpcomingRenewalRow(name, price != null ? price : 0.0, daysUntil);
-                count++;
-            }
+    private void setBarWeight(@NonNull View bar, float weight) {
+        ViewGroup.LayoutParams lp = bar.getLayoutParams();
+        if (lp instanceof LinearLayout.LayoutParams) {
+            ((LinearLayout.LayoutParams) lp).weight = weight;
+            bar.setLayoutParams(lp);
         }
-
-        binding.tvNoUpcomingRenewals.setVisibility(count == 0 ? View.VISIBLE : View.GONE);
     }
 
     private void addUpcomingRenewalRow(String name, double price, int daysUntil) {
@@ -281,8 +381,11 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (userSummaryRef != null && burnRateListener != null) {
-            userSummaryRef.removeEventListener(burnRateListener);
+        if (subscriptionsRef != null && subscriptionsListener != null) {
+            subscriptionsRef.removeEventListener(subscriptionsListener);
+        }
+        if (userRef != null && userBudgetListener != null) {
+            userRef.removeEventListener(userBudgetListener);
         }
         binding = null;
     }
