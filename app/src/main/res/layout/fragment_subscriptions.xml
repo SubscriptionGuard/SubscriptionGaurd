@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="9 active · $127.48 / month"
+                    android:text="0 subscriptions · $0.00 / month"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>

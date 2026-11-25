@@ -61,11 +61,10 @@
                 android:id="@+id/tv_service_badge"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:background="@drawable/bg_circle_elevated"
-                android:backgroundTint="@color/brand_netflix"
+                android:background="@drawable/bg_circle_green"
                 android:gravity="center"
-                android:text="N"
-                android:textColor="@color/white"
+                android:text="?"
+                android:textColor="@color/accent_green_text"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
@@ -74,7 +73,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Netflix"
+                android:text="Subscription"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -90,7 +89,7 @@
                     android:id="@+id/tv_service_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$16.99"
+                    android:text="$0.00"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -100,7 +99,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="/ month · Standard"
+                    android:text="/ month"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -133,21 +132,9 @@
                     android:id="@+id/tv_next_renewal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Oct 24, 2026"
+                    android:text="—"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_pill_amber"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
-                    android:text="3 DAYS"
-                    android:textColor="@color/warning_amber"
-                    android:textSize="10sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -231,7 +218,7 @@
                     android:id="@+id/tv_yearly_cost"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$203.88"
+                    android:text="$0.00"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -320,7 +307,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="What else could $203.88 buy?"
+                    android:text="What else could this buy?"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -329,7 +316,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="≈ 2 weeks of groceries"
+                    android:text="Open simulator to compare"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>

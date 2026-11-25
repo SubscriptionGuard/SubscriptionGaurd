@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="$1,529.76"
+                android:text="$0.00"
                 android:textColor="@color/accent_green_text"
                 android:textSize="34sp"
                 android:textStyle="bold" />
@@ -129,7 +129,7 @@
                     android:id="@+id/tv_equiv_groceries"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="15 weeks"
+                    android:text="0 weeks"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -157,7 +157,7 @@
                     android:id="@+id/tv_equiv_coffees"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="306"
+                    android:text="0"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -192,7 +192,7 @@
                     android:id="@+id/tv_equiv_flights"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2 flights"
+                    android:text="0 flights"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -220,7 +220,7 @@
                     android:id="@+id/tv_equiv_textbooks"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="3 terms"
+                    android:text="0 terms"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -405,7 +405,7 @@
                         android:id="@+id/tv_sim_five_year_total"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$8,560"
+                        android:text="$0"
                         android:textColor="@color/accent_green_text"
                         android:textSize="22sp"
                         android:textStyle="bold" />
